@@ -10,6 +10,8 @@ import subprocess
 import requests
 from dotenv import load_dotenv
 
+version = '5.0.2'
+
 def ping_host(host):
     param = '-n' if platform.system().lower() == 'windows' else '-c'
     command = ['ping', param, '4', host]
@@ -81,7 +83,7 @@ print(r' / ___ \| |  __/ |_) | | | | | |_| |___) |')
 print(r'/_/   \_\_|\___| .__/|_| |_|  \___/|____/ ')
 print(r'               |_|                        ')
 print()
-print('~ Welcome to Aleph OS 5.0 (tty)! ~')
+print(f'~ Welcome to Aleph OS {version} (tty)! ~')
 print("Type 'help' to view avaiable commands")
 print()
 while True:
@@ -140,30 +142,12 @@ while True:
         elif user_input == 'sysinfo':
             print('\033[2m~\033[0m')
             print('OS: Aleph OS')
-            print('Version: 5.0 (beta release)')
+            print(f'Version: {version} (beta release)')
             print(f'Python compiler: {platform.python_compiler()}')
             print(f'Python version: {platform.python_version()}')
         elif command == 'spm':
             if args != '':
                 try:
-                    ENV_PATH = os.path.join(project_dir, '.env')
-                    def ensure_token():
-                        if os.path.exists(ENV_PATH):
-                            load_dotenv(ENV_PATH)
-                        token = os.getenv('GITHUB_TOKEN')
-                        if not token:
-                            print("You'll need a unique token to access Aleph OS repository.")
-                            print("It'll be saved in you personal file .env")
-                            user_token = input('Enter GitHub token (ghp_...): ').strip()
-                            if not user_token:
-                                raise ValueError('no token.')
-                            with open(ENV_PATH, 'w', encoding='utf-8') as f:
-                                f.write(f'GITHUB_TOKEN={user_token}')
-                            print('[SUCCESS]: token saved.')
-                            load_dotenv(ENV_PATH)
-                            token = user_token
-                        return token
-                    GITHUB_TOKEN = ensure_token()
                     USERNAME = 'AZ3R0N-0'
                     REPO_NAME = 'Aleph-OS-spm-repository'
                     BRANCH = 'main'
@@ -171,26 +155,14 @@ while True:
                     url = f'https://raw.githubusercontent.com/{USERNAME}/{REPO_NAME}/{BRANCH}/{args}?t={timestamp}'
                     args = os.path.basename(args)
                     full_path = os.path.join(project_dir, args)
-                    headers = {
-                        'Authorization': f'token {GITHUB_TOKEN}',
-                        'Accept': 'application/vnd.github.v3.raw',
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
                     print("Downloading...")
-                    response = requests.get(url, headers=headers)
+                    response = requests.get(url)
                     response.raise_for_status()
                     with open(full_path, 'wb') as f:
                         f.write(response.content)
                 except requests.exceptions.HTTPError as e:
                     if response.status_code == 404:
                         raise FileNotFoundError(f"Cannot find '{args}' in Aleph OS repository.")
-                    elif response.status_code == 401:
-                        print('[ERROR]: Invalid token. Maybe this token is expired or corrupted.')
-                        if os.path.exists(ENV_PATH):
-                            os.remove(ENV_PATH)
-                            print('Corrupted file was removed.')
                     else:
                         print(f'HTTP error: {e}')
         else:
